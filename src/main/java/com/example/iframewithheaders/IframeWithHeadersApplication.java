@@ -26,9 +26,9 @@ public class IframeWithHeadersApplication {
         @GetMapping("/framee")
         public String framee(HttpServletRequest req, Model model) {
 
-            var jwtValue = req.getHeader("X-MADE-UP-HEADER");
+            var headerValue = req.getHeader("X-MADE-UP-HEADER");
 
-            model.addAttribute("headerValue", jwtValue);
+            model.addAttribute("headerValue", headerValue);
 
             return "framee";
         }
