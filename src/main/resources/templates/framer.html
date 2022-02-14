@@ -41,7 +41,7 @@
 <script>
 
     async function getSrc() {
-        const res = await fetch("http://localhost:8080/framee", {
+        const res = await fetch("/framee", {
             method: 'GET',
             headers: {
                 "X-MADE-UP-HEADER": document.querySelector("#headerValue").value
