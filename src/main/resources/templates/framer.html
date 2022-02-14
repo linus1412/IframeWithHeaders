@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@1.25.4/dist/full.css" rel="stylesheet" type="text/css"/>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2/dist/tailwind.min.css" rel="stylesheet" type="text/css"/>
+</head>
+
+<body>
+
+<div class="m-10">
+
+    <div class="card lg:card-side card-bordered">
+        <div class="card-body">
+            <h2 class="card-title">Framer</h2>
+            <div class="card-actions">
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">X-MADE-UP-HEADER</span>
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="headerValue" name="headerValue" th:value="${headerValue}"
+                               placeholder="header value" class="w-full pr-16 input input-primary input-bordered">
+                        <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-primary"
+                                onclick="getSrc()">SET
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            <div class="divider"></div>
+            <iframe style="height: 500px"></iframe>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+    async function getSrc() {
+        const res = await fetch("http://localhost:8080/framee", {
+            method: 'GET',
+            headers: {
+                "X-MADE-UP-HEADER": document.querySelector("#headerValue").value
+            }
+        });
+        const blob = await res.blob();
+        const urlObject = URL.createObjectURL(blob);
+        document.querySelector('iframe').setAttribute("src", urlObject)
+    }
+
+</script>
+
+</body>
+
+</html>
