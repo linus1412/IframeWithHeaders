@@ -66,7 +66,7 @@ public class IframeWithHeadersApplication {
 
             model.addAttribute("headerValue", headerValue);
 
-            return "jwt-framee";
+            return "framee";
         }
 
         @GetMapping("/jwt")
