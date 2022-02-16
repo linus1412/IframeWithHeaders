@@ -2,7 +2,6 @@ package com.example.iframewithheaders;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -24,24 +23,22 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
-@EnableConfigurationProperties(IframeWithHeadersApplication.JwtConfigProps.class)
+@EnableConfigurationProperties({IframeWithHeadersApplication.AppConfigProps.class})
 public class IframeWithHeadersApplication {
 
     public static void main(String[] args) {
@@ -52,10 +49,14 @@ public class IframeWithHeadersApplication {
     @RequiredArgsConstructor
     public static class FramesController {
 
-        private final JwtConfigProps jwtConfigProps;
+        private final AppConfigProps appConfigProps;
 
         @GetMapping("/")
-        public String framer() {
+        public String framer(Model model) {
+
+            model.addAttribute("frameePort", appConfigProps.getFrameePort());
+
+
             return "framer";
         }
 
@@ -81,9 +82,11 @@ public class IframeWithHeadersApplication {
                 .withArrayClaim("roles", new String[]{"jwt-framee"})
                 .withIssuedAt(Timestamp.valueOf(createdAt))
                 .withExpiresAt(Timestamp.valueOf(expiresAt))
-                .sign(Algorithm.HMAC512(jwtConfigProps.getSecret()));
+                .sign(Algorithm.HMAC512(appConfigProps.getJwtSecret()));
 
             model.addAttribute("jwt", jwt);
+            model.addAttribute("frameePort", appConfigProps.getFrameePort());
+
 
             return "jwt-framer";
         }
@@ -101,11 +104,27 @@ public class IframeWithHeadersApplication {
 
     }
 
-    @ConfigurationProperties("app.jwt")
+    @Configuration
+    @RequiredArgsConstructor
+    public static class AppConf implements WebMvcConfigurer {
+
+        private final AppConfigProps appConfigProps;
+
+        @Override
+        public void addCorsMappings(CorsRegistry registry) {
+            registry.addMapping("/**")
+                .allowedOrigins("http://localhost:%s".formatted(appConfigProps.getFramerPort()))
+                .allowedMethods("GET");
+        }
+    }
+
+    @ConfigurationProperties("app")
     @Data
-    public static class JwtConfigProps {
-        private String secret;
-        private String expiresAtOffsetSeconds;
+    public static class AppConfigProps {
+        private String jwtSecret;
+        private String jwtExpiresAtOffsetSeconds;
+        private Integer framerPort;
+        private Integer frameePort;
     }
 
     @Configuration
@@ -113,7 +132,7 @@ public class IframeWithHeadersApplication {
     @RequiredArgsConstructor
     public static class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-        private final JwtConfigProps jwtConfigProps;
+        private final AppConfigProps appConfigProps;
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
@@ -128,7 +147,7 @@ public class IframeWithHeadersApplication {
                     .anyRequest()
                     .authenticated()
                 .and()
-                .addFilter(new JwtAuthorizationFilter(jwtConfigProps.getSecret(), authenticationManager()))
+                .addFilter(new JwtAuthorizationFilter(appConfigProps.getJwtSecret(), authenticationManager()))
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         }

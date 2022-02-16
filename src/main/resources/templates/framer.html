@@ -38,10 +38,14 @@
 </div>
 
 
-<script>
+<script th:inline="javascript">
+
+    /*<![CDATA[*/
+
+    var frameePort = /*[[${frameePort}]]*/;
 
     async function getSrc() {
-        const res = await fetch("/framee", {
+        const res = await fetch("http:///localhost:" + frameePort + "/framee", {
             method: 'GET',
             headers: {
                 "X-MADE-UP-HEADER": document.querySelector("#headerValue").value
@@ -51,6 +55,8 @@
         const urlObject = URL.createObjectURL(blob);
         document.querySelector('iframe').setAttribute("src", urlObject)
     }
+
+    /*]]>*/
 
 </script>
 

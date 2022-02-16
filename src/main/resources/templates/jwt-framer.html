@@ -27,9 +27,11 @@
 
     /*<![CDATA[*/
 
+    var frameePort = /*[[${frameePort}]]*/;
+
     async function getSrc() {
         var jwt = /*[[${jwt}]]*/;
-        const res = await fetch("/jwt-framee", {
+        const res = await fetch("http:///localhost:" + frameePort + "/jwt-framee", {
             method: 'GET',
             headers: {
                 "Authorization": "Bearer " + jwt
