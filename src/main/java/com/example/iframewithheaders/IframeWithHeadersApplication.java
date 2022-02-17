@@ -33,8 +33,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
@@ -171,18 +173,29 @@ public class IframeWithHeadersApplication {
                 return;
             }
 
-            final DecodedJWT decodedJwt = JWT.require(Algorithm.HMAC512(secret.getBytes()))
-                .build()
-                .verify(authorizationHeader.replace("Bearer ", ""));
+            try {
+                final DecodedJWT decodedJwt = JWT.require(Algorithm.HMAC512(secret.getBytes()))
+                        .build()
+                        .verify(authorizationHeader.replace("Bearer ", ""));
 
-            var claims = decodedJwt.getClaim("roles");
-            final List<SimpleGrantedAuthority> collect = claims.asList(String.class).stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+                var claims = decodedJwt.getClaim("roles");
 
-            var authenticationToken = new UsernamePasswordAuthenticationToken(
-                decodedJwt.getSubject(),
-                null,
-                collect);
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                var authorities = Optional.ofNullable(claims)
+                        .map(c -> c.asList(String.class))
+                        .orElse(Collections.emptyList())
+                        .stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
+                var authenticationToken = new UsernamePasswordAuthenticationToken(
+                        decodedJwt.getSubject(),
+                        null,
+                        authorities);
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            } catch (Exception e) {
+                chain.doFilter(request, response);
+                return;
+            }
 
             super.doFilterInternal(request, response, chain);
         }
